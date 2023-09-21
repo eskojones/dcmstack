@@ -2,6 +2,7 @@
 #define DCM_HTTP_CLIENT_H
 #include <iostream>
 #include <map>
+#include <vector>
 
 #include "client_socket.h"
 #include "string.h"

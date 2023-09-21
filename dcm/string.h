@@ -3,7 +3,7 @@
 #include <iostream>
 #include <map>
 #include <fmt/core.h>
-
+#include <vector>
 
 namespace dcm {
     class string {

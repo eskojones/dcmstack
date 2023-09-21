@@ -3,6 +3,8 @@
 #include <iostream>
 #include <map>
 #include <fmt/core.h>
+#include <functional>
+#include <vector>
 
 #include <netdb.h>
 #include <unistd.h>
