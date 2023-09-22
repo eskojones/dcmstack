@@ -16,9 +16,10 @@ namespace dcm {
             class HttpResponse {
                 public:
                     int status;
-                    std::map<std::string,std::string> request{};
-                    std::map<std::string,std::string> headers{};
-                    std::string body{};
+                    std::map<std::string,std::string> request { };
+                    std::map<std::string,std::string> headers { };
+                    std::string body { };
+                    std::vector<std::string> path { };
                     HttpResponse();
                     ~HttpResponse();
             };

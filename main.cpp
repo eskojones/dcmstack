@@ -6,6 +6,10 @@
 #include "dcm/client_socket.h"
 #include "dcm/http_client.h"
 #include "dcm/http_server.h"
+#include "dcm/http_webapp.h"
+
+
+
 
 
 void onListen (dcm::ServerSocket *server, int socketIndex) {
@@ -54,22 +58,24 @@ void onRecvFailure (dcm::ServerSocket *server, int socketIndex) {
 }
 
 
-void httpRequestRouter(dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
+
+
+
+void httpNodeRequestRouter(dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
     std::string method = res->request.find("Method")->second;
-    if (method != "GET") return;
     std::string path = res->request.find("Path")->second;
     res->status = 200;
     res->body = path;
-//    std::string tmpFile = fmt::format("/tmp/{}{}.txt", res->request.find("IP-Address")->second, time(nullptr));
-//    std::string cmd = fmt::format("{} {} >{}", "/opt/homebrew/bin/node", "server.js", tmpFile);
-//    system(cmd.data());
-//    std::ifstream f(tmpFile);
-//    if (f.is_open()) {
-//        std::string line {};
-//        res->body = "";
-//        while (std::getline(f, line)) res->body.append(line);
-//        f.close();
-//    }
+    std::string tmpFile = fmt::format("/tmp/{}{}.txt", res->request.find("IP-Address")->second, time(nullptr));
+    std::string cmd = fmt::format("{} {} >{}", "/opt/homebrew/bin/node", "server.js", tmpFile);
+    system(cmd.data());
+    std::ifstream f(tmpFile);
+    if (f.is_open()) {
+        std::string line {};
+        res->body = "";
+        while (std::getline(f, line)) res->body.append(line);
+        f.close();
+    }
     server->GenerateResponse(res, { });
 }
 
@@ -113,7 +119,13 @@ int main () {
         usleep(200 * 1000);
     }*/
 
-    dcm::HttpServer httpd { httpRequestRouter, 42069 };
+    dcm::HttpWebApp app { };
+    dcm::HttpServer httpd {
+        [&](dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
+            app.Handler(server, res);
+        },
+        42069
+    };
     if (!httpd.Listen()) return 1;
     fmt::print("Listening on 42069\n");
     while (true) {

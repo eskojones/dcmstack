@@ -16,4 +16,6 @@ add_executable(untitled1 main.cpp
         dcm/string.h
         dcm/http_server.cpp
         dcm/http_server.h
+        dcm/http_webapp.cpp
+        dcm/http_webapp.h
 )

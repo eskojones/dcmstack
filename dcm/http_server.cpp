@@ -94,6 +94,7 @@ namespace dcm {
         HttpResponse res {};
         string request { request_buffer.data() };
         std::vector<string> lines = request.filter("\r\t").split("\n");
+        if (lines.size() < 2 || lines[0].empty()) return;
         std::vector<string> words = lines[0].split(" ");
         for (auto const& line : lines) {
             if (line.empty()) continue;
@@ -116,6 +117,22 @@ namespace dcm {
         res.request.insert({ "Protocol", words[2].data });
         res.request.insert({ "IP-Address", m_Socket.GetAddress(socketIndex).data() });
         if (!res.request.contains("Host")) res.request.insert({ "Host", host });
+        std::vector<dcm::string> _path = words[1].split("/");
+        for (auto const &dir : _path) res.path.push_back(dir.data);
+        std::vector<dcm::string> _query { };
+        std::vector<dcm::string> _args { };
+        if (!_path.empty()) _query = _path[_path.size() - 1].split("?");
+        if (!_query.empty()) _args = _query[_query.size() - 1].split("&");
+        for (auto const& arg : _args) {
+            std::vector<dcm::string> kvp = arg.split("=");
+            if (kvp.size() < 2) continue;
+            std::string queryname = fmt::format("query_string[{}]", kvp[0].data);
+            if (res.request.contains(queryname)) {
+                res.request.find(queryname)->second = kvp[1].data;
+            } else {
+                res.request.insert({ queryname, kvp[1].data });
+            }
+        }
         m_RequestRouter(this, &res);
         LogRequest(&res);
         m_Socket.Send(socketIndex, GetResponseString(&res));
