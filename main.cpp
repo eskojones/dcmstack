@@ -7,9 +7,7 @@
 #include "dcm/http_client.h"
 #include "dcm/http_server.h"
 #include "dcm/http_webapp.h"
-
-
-
+#include "todo_app.h"
 
 
 void onListen (dcm::ServerSocket *server, int socketIndex) {
@@ -58,79 +56,13 @@ void onRecvFailure (dcm::ServerSocket *server, int socketIndex) {
 }
 
 
-
-
-
-void httpNodeRequestRouter(dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
-    std::string method = res->request.find("Method")->second;
-    std::string path = res->request.find("Path")->second;
-    res->status = 200;
-    res->body = path;
-    std::string tmpFile = fmt::format("/tmp/{}{}.txt", res->request.find("IP-Address")->second, time(nullptr));
-    std::string cmd = fmt::format("{} {} >{}", "/opt/homebrew/bin/node", "server.js", tmpFile);
-    system(cmd.data());
-    std::ifstream f(tmpFile);
-    if (f.is_open()) {
-        std::string line {};
-        res->body = "";
-        while (std::getline(f, line)) res->body.append(line);
-        f.close();
-    }
-    server->GenerateResponse(res, { });
-}
-
-
 int main () {
-    //test dcm/string.h
-    /*
-    dcm::string s { "    \t   this:    is :a:test  " };
-    auto words = s.trim().rtrim().split(":");
-    for (auto &word : words) fmt::print("{}\n", word.trim().rtrim().data);
-    */
-
-    //test dcm/http_client.h (and client socket)
-    /*
-    dcm::HttpClient http { "vectrex.dcm.nz", "/", 80 };
-    http.GetResponse();
-    std::map<std::string,std::string> headers = http.GetHeaders();
-    for (auto const& [k,v] : headers) {
-        fmt::print("{} = {}\n", k, v);
-    }
-     */
-
-    //test dcm/server_socket.h
-    /*
-    dcm::ServerSocket server { dcm::ServerSocket::SocketType::TCP };
-    server.AddHandler("listen", onListen);
-    server.AddHandler("accept", onAccept);
-    server.AddHandler("close", onClose);
-    server.AddHandler("send", onSend);
-    server.AddHandler("recv", onRecv);
-    server.AddHandler("listen-failure", onListenFailure);
-    server.AddHandler("accept-failure", onAcceptFailure);
-    server.AddHandler("close-failure", onCloseFailure);
-    server.AddHandler("send-failure", onSendFailure);
-    server.AddHandler("recv-failure", onRecvFailure);
-    server.Listen(42069);
-
-    while(server.IsListening()) {
-        server.Accept();
-        server.RecvAll();
-        usleep(200 * 1000);
-    }*/
-
-    dcm::HttpWebApp app { };
-    dcm::HttpServer httpd {
-        [&](dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
-            app.Handler(server, res);
-        },
-        42069
-    };
-    if (!httpd.Listen()) return 1;
+    dcm::HttpWebApp app(42069);
+    if (!app.Listen()) return 1;
     fmt::print("Listening on 42069\n");
-    while (true) {
-        httpd.Tick();
-        usleep(200 * 1000);
+    while (app.IsListening()) {
+        app.Tick();
+        usleep(1000);
     }
 
     return 0;

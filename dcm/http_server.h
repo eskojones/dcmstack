@@ -30,8 +30,8 @@ namespace dcm {
             std::function<void(HttpServer *,HttpResponse *)> m_RequestRouter;
 
             HttpServer(std::function<void(HttpServer *,HttpResponse *)> router, int port);
-            bool Listen(int port);
-            bool Listen();
+            virtual bool Listen(int port);
+            virtual bool Listen();
             std::string GetDateString(time_t *time, const std::string& fmt);
             void LogRequest(HttpResponse *response);
             void GenerateResponse(HttpResponse *res, const std::map<std::string,std::string>& customHeaders);
@@ -42,7 +42,8 @@ namespace dcm {
             void HandleRequest(int socketIndex, std::string_view request_buffer);
             void OnAccept(ServerSocket *server, int index);
             void OnRecv(ServerSocket *server, int index);
-            void Tick();
+            virtual void Tick();
+            virtual bool IsListening();
 
         private:
             ServerSocket m_Socket { ServerSocket::SocketType::TCP };

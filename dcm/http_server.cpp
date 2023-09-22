@@ -154,4 +154,9 @@ namespace dcm {
         m_Socket.Accept();
         m_Socket.RecvAll();
     }
+
+
+    bool HttpServer::IsListening () {
+        return m_Socket.IsListening();
+    }
 }
