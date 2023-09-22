@@ -1,6 +1,7 @@
 #ifndef DCM_HTTP_SERVER_H
 #define DCM_HTTP_SERVER_H
 #include <iostream>
+#include <functional>
 #include <fstream>
 #include <iomanip>
 #include <ctime>
@@ -21,17 +22,16 @@ namespace dcm {
                     HttpResponse();
                     ~HttpResponse();
             };
-            std::string m_Root { "./html" };
             int m_Port = 80;
             std::string m_ServerName { "DcmStackHttpServer" };
             std::string m_ServerVersion { "0.1.0" };
-            char m_DateBuffer[30]{};
+            char m_DateBuffer[100] { };
+            std::function<void(HttpServer *,HttpResponse *)> m_RequestRouter;
 
-            HttpServer(int port, std::string_view root);
-            ~HttpServer();
+            HttpServer(std::function<void(HttpServer *,HttpResponse *)> router, int port);
             bool Listen(int port);
             bool Listen();
-            std::string GetDateString(time_t *time, std::string fmt);
+            std::string GetDateString(time_t *time, const std::string& fmt);
             void LogRequest(HttpResponse *response);
             void GenerateResponse(HttpResponse *res, const std::map<std::string,std::string>& customHeaders);
             static std::string GetResponseString(HttpResponse *res);

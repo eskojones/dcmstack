@@ -54,6 +54,26 @@ void onRecvFailure (dcm::ServerSocket *server, int socketIndex) {
 }
 
 
+void httpRequestRouter(dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
+    std::string method = res->request.find("Method")->second;
+    if (method != "GET") return;
+    std::string path = res->request.find("Path")->second;
+    res->status = 200;
+    res->body = path;
+//    std::string tmpFile = fmt::format("/tmp/{}{}.txt", res->request.find("IP-Address")->second, time(nullptr));
+//    std::string cmd = fmt::format("{} {} >{}", "/opt/homebrew/bin/node", "server.js", tmpFile);
+//    system(cmd.data());
+//    std::ifstream f(tmpFile);
+//    if (f.is_open()) {
+//        std::string line {};
+//        res->body = "";
+//        while (std::getline(f, line)) res->body.append(line);
+//        f.close();
+//    }
+    server->GenerateResponse(res, { });
+}
+
+
 int main () {
     //test dcm/string.h
     /*
@@ -93,7 +113,7 @@ int main () {
         usleep(200 * 1000);
     }*/
 
-    dcm::HttpServer httpd { 42069, "./html" };
+    dcm::HttpServer httpd { httpRequestRouter, 42069 };
     if (!httpd.Listen()) return 1;
     fmt::print("Listening on 42069\n");
     while (true) {
