@@ -31,6 +31,7 @@ namespace dcm {
             void SetFailure(int errorCode, int socketIndex, std::string_view message);
             std::string_view GetAddress(int socketIndex);
             std::string_view GetBuffer(int socketIndex);
+            void ClearBuffer(int socketIndex);
             void AddHandler (const std::string& event, const std::function<void(ServerSocket*,int)>& fn);
             bool Listen(int port);
             int Accept();

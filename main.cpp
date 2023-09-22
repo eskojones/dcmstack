@@ -5,6 +5,7 @@
 #include "dcm/server_socket.h"
 #include "dcm/client_socket.h"
 #include "dcm/http_client.h"
+#include "dcm/http_server.h"
 
 
 void onListen (dcm::ServerSocket *server, int socketIndex) {
@@ -25,8 +26,11 @@ void onSend (dcm::ServerSocket *server, int socketIndex) {
 }
 
 void onRecv (dcm::ServerSocket *server, int socketIndex) {
-    fmt::print("<{}> {}", socketIndex, server->GetBuffer(socketIndex));
-    server->Broadcast(fmt::format("<{}> {}", socketIndex, server->GetBuffer(socketIndex)));
+    std::string_view buffer = server->GetBuffer(socketIndex);
+    if (!buffer.find('\n')) return;
+    fmt::print("<{}> {}", socketIndex, buffer);
+    server->Broadcast(fmt::format("<{}> {}", socketIndex, buffer));
+    server->ClearBuffer(socketIndex);
 }
 
 void onListenFailure(dcm::ServerSocket *server, int) {
@@ -52,16 +56,24 @@ void onRecvFailure (dcm::ServerSocket *server, int socketIndex) {
 
 int main () {
     //test dcm/string.h
+    /*
     dcm::string s { "    \t   this:    is :a:test  " };
     auto words = s.trim().rtrim().split(":");
     for (auto &word : words) fmt::print("{}\n", word.trim().rtrim().data);
+    */
 
     //test dcm/http_client.h (and client socket)
+    /*
     dcm::HttpClient http { "vectrex.dcm.nz", "/", 80 };
     http.GetResponse();
-    fmt::print("{}\n", http.GetHeader("Server"));
+    std::map<std::string,std::string> headers = http.GetHeaders();
+    for (auto const& [k,v] : headers) {
+        fmt::print("{} = {}\n", k, v);
+    }
+     */
 
     //test dcm/server_socket.h
+    /*
     dcm::ServerSocket server { dcm::ServerSocket::SocketType::TCP };
     server.AddHandler("listen", onListen);
     server.AddHandler("accept", onAccept);
@@ -78,6 +90,14 @@ int main () {
     while(server.IsListening()) {
         server.Accept();
         server.RecvAll();
+        usleep(200 * 1000);
+    }*/
+
+    dcm::HttpServer httpd { 42069, "./html" };
+    if (!httpd.Listen()) return 1;
+    fmt::print("Listening on 42069\n");
+    while (true) {
+        httpd.Tick();
         usleep(200 * 1000);
     }
 

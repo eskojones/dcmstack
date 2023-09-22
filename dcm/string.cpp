@@ -81,4 +81,11 @@ namespace dcm {
         return *this;
     }
 
+    string& string::join (std::vector<string>& strings, std::string_view delim) {
+        for (auto const& str : strings) {
+            data.append(fmt::format("{}{}", str.data, delim));
+        }
+        return *this;
+    }
+
 }

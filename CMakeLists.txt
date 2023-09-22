@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.12)
 project(untitled1)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
 link_libraries(fmt)
@@ -14,4 +14,6 @@ add_executable(untitled1 main.cpp
         dcm/http_client.h
         dcm/string.cpp
         dcm/string.h
+        dcm/http_server.cpp
+        dcm/http_server.h
 )

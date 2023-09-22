@@ -20,6 +20,7 @@ namespace dcm {
     }
 
     void ServerSocket::Event (const std::string& ev, int index) {
+        if (!m_EventHandlers.contains(ev)) return;
         for (auto const& fn : m_EventHandlers.find(ev)->second) {
             fn(this, index);
         }
@@ -67,6 +68,11 @@ namespace dcm {
     std::string_view ServerSocket::GetBuffer(int socketIndex) {
         if (!IsValidSocketIndex(socketIndex)) return std::string_view { "" };
         return std::string_view { (char *)(m_Buffers + (socketIndex * m_BufferSize)) };
+    }
+
+    void ServerSocket::ClearBuffer(int socketIndex) {
+        memset(reinterpret_cast<void *>(m_Buffers + (socketIndex * m_BufferSize)), 0, m_BufferSize);
+        m_BufferUsed[socketIndex] = 0;
     }
 
     void ServerSocket::AddHandler (const std::string& event, const std::function<void(ServerSocket*,int)>& fn) {
@@ -126,6 +132,7 @@ namespace dcm {
 
             m_Address[i] = fmt::format("{}.{}.{}.{}:{}", d, c, b, a, m_ClientSockets[i].sin_port);
             SetBlocking(m_Descriptors[i], false);
+            ClearBuffer(i);
             Event("accept", i);
             return i;
         }
@@ -171,7 +178,12 @@ namespace dcm {
             return -1;
         }
         char tmp[m_BufferSize];
-        ssize_t bytes = recv(m_Descriptors[socketIndex], tmp, m_BufferSize, 0);
+        if (m_BufferUsed[socketIndex] == m_BufferSize) {
+            SetFailure(10, socketIndex, "Client buffer is full");
+            Event("recv-failure", socketIndex);
+            return -3;
+        }
+        ssize_t bytes = recv(m_Descriptors[socketIndex], tmp, m_BufferSize - m_BufferUsed[socketIndex], 0);
         if (bytes < 0) {
             if (errno == EAGAIN) return 0;
             if (errno == EWOULDBLOCK) return 0;
@@ -181,8 +193,8 @@ namespace dcm {
             return -2;
         } else if (bytes > 0) {
             char *buf = (char *)(m_Buffers + (socketIndex * m_BufferSize));
-            m_BufferUsed[socketIndex] = static_cast<int>(bytes);
-            memcpy(buf, tmp, bytes);
+            memcpy(buf + m_BufferUsed[socketIndex], tmp, bytes);
+            m_BufferUsed[socketIndex] += static_cast<int>(bytes);
             buf[m_BufferUsed[socketIndex]] = 0;
             Event("recv", socketIndex);
         }

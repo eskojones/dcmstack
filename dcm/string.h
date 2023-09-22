@@ -27,6 +27,7 @@ namespace dcm {
             string& filter(std::string_view filterchars);
             string& trim();
             string& rtrim();
+            string& join (std::vector<string>& strings, std::string_view delim);
     };
 }
 
