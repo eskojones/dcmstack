@@ -96,6 +96,7 @@ namespace dcm {
         std::vector<string> lines = request.filter("\r\t").split("\n");
         if (lines.size() < 2 || lines[0].empty()) return;
         std::vector<string> words = lines[0].split(" ");
+        if (words.size() < 3) return;
         for (auto const& line : lines) {
             if (line.empty()) continue;
             string header { line.data };
