@@ -42,12 +42,12 @@ namespace dcm {
         }
 
         res->status = 200;
-        std::map<std::string,std::string> customHeaders { { "Web-App-Version", "0.1.0" } };
+        std::map<std::string,std::string> customHeaders { { "Web-App-Version", "0.2.0" } };
 
         if (res->path.size() > 1) {
+            //only serve files that are (.html|.htm|.js|.css)
             dcm::string filename{res->request.find("URI")->second};
-            std::string extension = filename.substr(filename.lastIndexOf('.'),
-                                                    static_cast<int>(filename.data.size())).data;
+            std::string extension = filename.substr(filename.lastIndexOf('.'), static_cast<int>(filename.data.size())).data;
 
             bool validFile = false;
             if (extension == ".html" || extension == ".htm") {

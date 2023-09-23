@@ -128,4 +128,55 @@ namespace dcm {
     }
 
 
+    bool string::equals(const std::string& other) {
+        int l = static_cast<int>(data.size());
+        int other_l = static_cast<int>(other.size());
+        for (int i = 0, len = l > other_l ? l : other_l; i < len; i++) {
+            if (data[i] != other[i]) return false;
+        }
+        return true;
+    }
+
+
+    bool string::equals(const string& other) {
+        int l = static_cast<int>(data.size());
+        int other_l = static_cast<int>(other.data.size());
+        for (int i = 0, len = l > other_l ? l : other_l; i < len; i++) {
+            if (data[i] != other.data[i]) return false;
+        }
+        return true;
+    }
+
+
+    bool string::contains(const std::string& needle) {
+        int jl = static_cast<int>(needle.size());
+        for (int i = 0, il = static_cast<int>(data.size()); i < il; i++) {
+            bool match = true;
+            for (int j = i; j < jl; j++) {
+                if (data[i] != needle[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) return true;
+        }
+        return false;
+    }
+
+
+    bool string::contains(const string& needle) {
+        int jl = static_cast<int>(needle.data.size());
+        for (int i = 0, il = static_cast<int>(data.size()); i < il; i++) {
+            bool match = true;
+            for (int j = i; j < jl; j++) {
+                if (data[i] != needle.data[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) return true;
+        }
+        return false;
+    }
+
 }

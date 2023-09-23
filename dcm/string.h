@@ -34,6 +34,10 @@ namespace dcm {
             int indexOf(char ch);
             int lastIndexOf(char ch);
             string substr(int start, int stop);
+            bool equals(const std::string& other);
+            bool equals(const string& other);
+            bool contains(const std::string& needle);
+            bool contains(const string& needle);
 
     };
 
