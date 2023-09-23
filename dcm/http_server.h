@@ -1,12 +1,16 @@
 #ifndef DCM_HTTP_SERVER_H
 #define DCM_HTTP_SERVER_H
+
 #include <iostream>
 #include <functional>
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <utility>
+
 #include "server_socket.h"
 #include "string.h"
+
 
 namespace dcm {
 
@@ -23,6 +27,7 @@ namespace dcm {
                     HttpResponse();
                     ~HttpResponse();
             };
+
             int m_Port = 80;
             std::string m_ServerName { "DcmStackHttpServer" };
             std::string m_ServerVersion { "0.1.0" };

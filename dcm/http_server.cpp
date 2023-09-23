@@ -1,6 +1,5 @@
 #include "http_server.h"
 
-#include <utility>
 
 namespace dcm {
 
@@ -91,12 +90,26 @@ namespace dcm {
 
 
     void HttpServer::HandleRequest(int socketIndex, std::string_view request_buffer) {
-        HttpResponse res {};
-        string request { request_buffer.data() };
-        std::vector<string> lines = request.filter("\r\t").split("\n");
+        dcm::string request { request_buffer.data() };
+        std::vector<dcm::string> lines = request.filter("\r\t").split("\n");
         if (lines.size() < 2 || lines[0].empty()) return;
-        std::vector<string> words = lines[0].split(" ");
+        std::vector<dcm::string> words = lines[0].split(" ");
         if (words.size() < 3) return;
+
+        //validate method
+        std::vector<std::string> methods = { "HEAD", "GET", "POST"  };
+        if (!std::any_of(methods.begin(), methods.end(),
+             [&] (const auto &item) { return item == words[0].data; })
+        ) return;
+
+        //validate protocol
+        std::vector<std::string> protocols = { "HTTP/1.0", "HTTP/1.1" };
+        if (!std::any_of(protocols.begin(), protocols.end(),
+             [&] (const auto &item) { return item == words[2].data; })
+        ) return;
+
+        //parse headers
+        HttpResponse res { };
         for (auto const& line : lines) {
             if (line.empty()) continue;
             string header { line.data };
@@ -108,34 +121,45 @@ namespace dcm {
                 }
             }
             for (auto s : kvp) s.trim().rtrim().filter("\n");
+
             res.request.insert({ kvp[0].data, kvp[1].trim().data });
             //fmt::print("header: {}={}\n", kvp[0].data, headers.find(kvp[0].data)->second);
         }
+
         std::string host = res.request.contains("Host") ? res.request.find("Host")->second : "localhost";
         std::string contents {};
+
+        dcm::string uri = words[1].indexOf('?') > -1 ? words[1].substr(0, words[1].indexOf('?') - 1) : words[1];
+        dcm::string querystring { };
+        if (words[1].indexOf('?') > -1) {
+            querystring = words[1].substr(words[1].indexOf('?') + 1, static_cast<int>(words[1].data.size()));
+        }
+
+        res.request.insert({ "IP-Address", m_Socket.GetAddress(socketIndex).data() });
+        res.request.insert({ "Host", host });
         res.request.insert({ "Method", words[0].data });
         res.request.insert({ "Path", words[1].data });
         res.request.insert({ "Protocol", words[2].data });
-        res.request.insert({ "IP-Address", m_Socket.GetAddress(socketIndex).data() });
-        if (!res.request.contains("Host")) res.request.insert({ "Host", host });
-        std::vector<dcm::string> _path = words[1].split("/");
-        for (auto const &dir : _path) res.path.push_back(dir.data);
-        std::vector<dcm::string> _query { };
-        std::vector<dcm::string> _args { };
-        if (!_path.empty()) _query = _path[_path.size() - 1].split("?");
-        if (!_query.empty()) _args = _query[_query.size() - 1].split("&");
-        for (auto const& arg : _args) {
-            std::vector<dcm::string> kvp = arg.split("=");
-            if (kvp.size() < 2) continue;
-            std::string queryname = fmt::format("query_string[{}]", kvp[0].data);
-            if (res.request.contains(queryname)) {
-                res.request.find(queryname)->second = kvp[1].data;
+        res.request.insert({ "URI", uri.data.empty() ? "/" : uri.data });
+        res.request.insert({ "Query", querystring.data });
+
+        auto vars = querystring.split("&");
+        for (auto const& var : vars) {
+            auto kvp = var.split("=");
+            if (kvp.size() != 2) continue;
+            std::string varname = fmt::format("Query[{}]", kvp[0].data);
+            if (res.request.contains(varname)) {
+                res.request.find(varname)->second = kvp[1].data;
             } else {
-                res.request.insert({ queryname, kvp[1].data });
+                res.request.insert({ varname, kvp[1].data });
             }
         }
+
+        std::vector<dcm::string> _path = uri.split("/");
+        for (auto const &dir : _path) res.path.push_back(dir.data);
         m_RequestRouter(this, &res);
         LogRequest(&res);
+
         m_Socket.Send(socketIndex, GetResponseString(&res));
     }
 
@@ -159,4 +183,5 @@ namespace dcm {
     bool HttpServer::IsListening () {
         return m_Socket.IsListening();
     }
+
 }

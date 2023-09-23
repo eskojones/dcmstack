@@ -58,7 +58,10 @@ void onRecvFailure (dcm::ServerSocket *server, int socketIndex) {
 
 int main () {
     dcm::HttpWebApp app(42069);
-    if (!app.Listen()) return 1;
+    if (!app.Listen()) {
+        fmt::print("Failed to start HttpWebApp server\n");
+        return 1;
+    }
     fmt::print("Listening on 42069\n");
     while (app.IsListening()) {
         app.Tick();
