@@ -30,7 +30,7 @@ namespace dcm {
 
             int m_Port = 80;
             std::string m_ServerName { "DcmStackHttpServer" };
-            std::string m_ServerVersion { "0.1.0" };
+            std::string m_ServerVersion { "0.2.0" };
             char m_DateBuffer[100] { };
             std::function<void(HttpServer *,HttpResponse *)> m_RequestRouter;
 
@@ -49,6 +49,7 @@ namespace dcm {
             void OnRecv(ServerSocket *server, int index);
             virtual void Tick();
             virtual bool IsListening();
+            virtual void Stop();
 
         private:
             ServerSocket m_Socket { ServerSocket::SocketType::TCP };

@@ -8,7 +8,9 @@
 #include "dcm/http_server.h"
 #include "dcm/http_webapp.h"
 #include "todo_app.h"
-
+#include "fdn.h"
+#include <functional>
+#include <csignal>
 
 void onListen (dcm::ServerSocket *server, int socketIndex) {
     fmt::print("ServerSocket.Listen\n");
@@ -57,15 +59,35 @@ void onRecvFailure (dcm::ServerSocket *server, int socketIndex) {
 
 
 int main () {
-    dcm::HttpWebApp app(42069);
-    if (!app.Listen()) {
-        fmt::print("Failed to start HttpWebApp server\n");
-        return 1;
-    }
-    fmt::print("Listening on 42069\n");
-    while (app.IsListening()) {
-        app.Tick();
-        usleep(1000);
+//    dcm::HttpWebApp app{};
+//
+//    app.AddRoute("test", "/foo/:id/bar/:name",
+//         [&](dcm::HttpServer *server, dcm::HttpServer::HttpResponse *res) {
+//             std::map<std::string,std::string> customHeaders {
+//                 { "Content-Type", "text/html" }
+//             };
+//             res->status = 200;
+//             res->body = "<h1>Test Route</h1><hr/>\n";
+//             for (auto const &[k, v]: res->request) {
+//                 res->body.append(fmt::format("<li>{}: {}</li>\n", k, v));
+//             }
+//             server->GenerateResponse(res, customHeaders);
+//         }
+//    );
+//    if (!app.Listen(42069)) {
+//        fmt::print("Failed to start HttpWebApp server\n");
+//        return 1;
+//    }
+//    fmt::print("Listening on 42069\n");
+//    while (app.IsListening()) {
+//        app.Tick();
+//        usleep(1000);
+//    }
+    FDN fdn;
+    fdn.Start(42069);
+    while(fdn.IsListening()) {
+        fdn.Tick();
+        usleep(100 * 1000);
     }
 
     return 0;

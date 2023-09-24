@@ -1,5 +1,6 @@
 #include "server_socket.h"
 
+
 namespace dcm {
 
     bool ServerSocket::SetBlocking (int fd, bool blocking) {
@@ -14,10 +15,12 @@ namespace dcm {
         #endif
     }
 
+
     void ServerSocket::Alloc(int size) {
         m_BufferSize = size;
         m_Buffers = (char *)malloc(m_BufferSize * 256 * sizeof(char));
     }
+
 
     void ServerSocket::Event (const std::string& ev, int index) {
         if (!m_EventHandlers.contains(ev)) return;
@@ -26,21 +29,29 @@ namespace dcm {
         }
     }
 
+
     ServerSocket::ServerSocket() : m_Type { TCP } {
         Alloc(m_BufferSize);
     }
+
 
     ServerSocket::ServerSocket(SocketType type) : m_Type { type } {
         Alloc(m_BufferSize);
     }
 
+
     ServerSocket::~ServerSocket() {
         free(m_Buffers);
     }
 
+    void ServerSocket::OnSignal(int sig) {
+    }
+
+
     bool ServerSocket::IsListening() const {
         return m_Listening;
     }
+
 
     bool ServerSocket::IsValidSocketIndex(int socketIndex) {
         if (socketIndex < 0 || socketIndex > 255 || !m_Connected[socketIndex]) {
@@ -50,9 +61,11 @@ namespace dcm {
         return true;
     }
 
+
     struct SocketFailureInfo *ServerSocket::GetFailure() {
         return &m_Failure;
     }
+
 
     void ServerSocket::SetFailure(int errorCode, int socketIndex, std::string_view message) {
         m_Failure.ErrorCode = errorCode;
@@ -60,20 +73,24 @@ namespace dcm {
         m_Failure.Message = message;
     }
 
+
     std::string_view ServerSocket::GetAddress(int socketIndex) {
         if (!IsValidSocketIndex(socketIndex)) return "";
         return std::string_view { m_Address[socketIndex] };
     }
+
 
     std::string_view ServerSocket::GetBuffer(int socketIndex) {
         if (!IsValidSocketIndex(socketIndex)) return std::string_view { "" };
         return std::string_view { (char *)(m_Buffers + (socketIndex * m_BufferSize)) };
     }
 
+
     void ServerSocket::ClearBuffer(int socketIndex) {
         memset(reinterpret_cast<void *>(m_Buffers + (socketIndex * m_BufferSize)), 0, m_BufferSize);
         m_BufferUsed[socketIndex] = 0;
     }
+
 
     void ServerSocket::AddHandler (const std::string& event, const std::function<void(ServerSocket*,int)>& fn) {
         if (!m_EventHandlers.contains(event)) {
@@ -81,6 +98,7 @@ namespace dcm {
         }
         m_EventHandlers.find(event)->second.push_back(fn);
     }
+
 
     bool ServerSocket::Listen(int port) {
         m_Listening = false;
@@ -101,10 +119,19 @@ namespace dcm {
             return false;
         }
         SetBlocking(m_ListenDescriptor, false);
+        auto sighandle = [](int) {
+            for (int i = 0; i < 256; i++) {
+                shutdown(2 + i, SHUT_RDWR);
+            }
+        };
+        signal(SIGKILL, sighandle);
+        signal(SIGTERM, sighandle);
+        signal(SIGSEGV, sighandle);
         m_Listening = true;
         Event("listen", 0);
         return true;
     }
+
 
     int ServerSocket::Accept() {
         if (!m_Listening) {
@@ -141,6 +168,7 @@ namespace dcm {
         return -3;
     }
 
+
     bool ServerSocket::Close(int socketIndex) {
         if (!IsValidSocketIndex(socketIndex)) return false;
         int ret = close(m_Descriptors[socketIndex]);
@@ -153,6 +181,7 @@ namespace dcm {
         }
         return ret == 0;
     }
+
 
     bool ServerSocket::Send (int socketIndex, const char *buf, int len) {
         if (!IsValidSocketIndex(socketIndex)) {
@@ -168,9 +197,11 @@ namespace dcm {
         return ret;
     }
 
+
     bool ServerSocket::Send (int socketIndex, std::string_view str) {
         return Send(socketIndex, str.data(), static_cast<int>(str.size()));
     }
+
 
     int ServerSocket::Recv (int socketIndex) {
         if (!IsValidSocketIndex(socketIndex)) {
@@ -201,9 +232,11 @@ namespace dcm {
         return static_cast<int>(bytes);
     }
 
+
     void ServerSocket::RecvAll() {
         for (int i = 0; i < 256; i++) Recv(i);
     }
+
 
     int ServerSocket::Broadcast(const char *buf, int len) {
         int sent = 0;
@@ -215,12 +248,20 @@ namespace dcm {
         return sent;
     }
 
+
     int ServerSocket::Broadcast(std::string_view str) {
         return Broadcast(str.data(), static_cast<int>(str.size()));
     }
 
+
     bool ServerSocket::IsConnected (int socketIndex) const {
         return m_Connected[socketIndex];
     }
+
+
+    void ServerSocket::Stop() {
+        shutdown(m_ListenDescriptor, SHUT_RDWR);
+    }
+
 
 }

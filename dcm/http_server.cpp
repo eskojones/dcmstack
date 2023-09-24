@@ -82,9 +82,9 @@ namespace dcm {
     std::string HttpServer::GetResponseString(HttpResponse *res) {
         std::string str = fmt::format("HTTP {} OK\n", res->status);
         for (auto const& [k,v] : res->headers) {
-            str = fmt::format("{}{}: {}\n", str, k, v);
+            str.append(fmt::format("{}: {}\n", k, v));
         }
-        str = fmt::format("{}\n{}", str, res->body);
+        str.append(fmt::format("\n{}", res->body));
         return str;
     }
 
@@ -184,4 +184,7 @@ namespace dcm {
         return m_Socket.IsListening();
     }
 
+    void HttpServer::Stop () {
+        m_Socket.Stop();
+    }
 }

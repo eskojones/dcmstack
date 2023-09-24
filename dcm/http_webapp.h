@@ -12,20 +12,25 @@
 
 namespace dcm {
 
-    class HttpWebApp : HttpServer {
+    class HttpWebApp : public HttpServer {
 
         private:
             std::map<std::string,std::string> m_Config { };
-            std::map<std::string,std::function<void(HttpServer*,HttpServer::HttpResponse*)>> m_Routes { };
+            std::map<std::string,std::vector<std::string>> m_RoutePaths { };
+            std::map<std::string,std::function<void(HttpServer*,HttpServer::HttpResponse*)>> m_RouteFunctions { };
 
         public:
-            explicit HttpWebApp (int port);
+            int m_VersionMajor, m_VersionMinor, m_VersionRelease;
+            HttpWebApp ();
             void Handler(HttpServer *server, HttpServer::HttpResponse *res);
             std::string GetFileContents(const std::string& filename);
-            void AddRoute(const std::string& prefix, const std::function<void(HttpServer*,HttpServer::HttpResponse*)>& fn);
+            std::string GetRoute(HttpServer::HttpResponse *res);
+            void AddRoute(const std::string& name, const std::string& path, const std::function<void(HttpServer*,HttpServer::HttpResponse*)>& fn);
             bool Listen() override;
+            bool Listen(int port) override;
             void Tick() override;
             bool IsListening() override;
+            void Stop() override;
 
     };
 

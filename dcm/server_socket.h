@@ -25,6 +25,7 @@ namespace dcm {
             ServerSocket();
             explicit ServerSocket(SocketType type);
             ~ServerSocket();
+            void OnSignal(int sig);
             [[nodiscard]] bool IsListening() const;
             bool IsValidSocketIndex(int socketIndex);
             struct SocketFailureInfo *GetFailure();
@@ -43,6 +44,7 @@ namespace dcm {
             int Broadcast(const char *buf, int len);
             int Broadcast(std::string_view str);
             [[nodiscard]] bool IsConnected (int socketIndex) const;
+            virtual void Stop();
 
         private:
             SocketType m_Type { TCP };

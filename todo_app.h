@@ -6,15 +6,15 @@
 
 
 class TodoApp : dcm::HttpWebApp {
-        TodoApp () : HttpWebApp(42069) {}
 
 
         class Account {
-            int m_Id;
-        std::string m_Username, m_Password;
-        public:
-            Account(std::string name, std::string password);
-    };
+                int m_Id;
+                std::string m_Username, m_Password;
+            public:
+                Account (std::string name, std::string password);
+        };
+
     public:
 
     private:

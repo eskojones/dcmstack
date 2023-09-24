@@ -31,6 +31,8 @@ namespace dcm {
             string& trim();
             string& rtrim();
             string& join(std::vector<string>& strings, std::string_view delim);
+            string& replace(const std::string& search, const std::string& replace);
+            int indexOf(const std::string& search);
             int indexOf(char ch);
             int lastIndexOf(char ch);
             string substr(int start, int stop);
@@ -38,6 +40,8 @@ namespace dcm {
             bool equals(const string& other);
             bool contains(const std::string& needle);
             bool contains(const string& needle);
+            bool startsWith(const std::string& word);
+            bool endsWith(const std::string& word);
 
     };
 

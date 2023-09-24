@@ -36,7 +36,7 @@ namespace dcm {
     }
 
 
-    std::vector<string> string::split (std::string_view delims) const {
+    std::vector<string> string::split(std::string_view delims) const {
         string current { "" };
         std::vector<string> ret { };
         for (auto const ch : data) {
@@ -56,11 +56,11 @@ namespace dcm {
     }
 
 
-    string& string::filter (std::string_view filterchars) {
-        std::string ret {};
+    string& string::filter(std::string_view filterchars) {
+        std::string ret { };
         for (auto const &ch : data) {
             bool isFiltered = false;
-            for (auto const &f : filterchars) {
+            for (auto const & f : filterchars) {
                 if (ch == f) {
                     isFiltered = true;
                     break;
@@ -73,7 +73,7 @@ namespace dcm {
     }
 
 
-    string& string::trim () {
+    string& string::trim() {
         std::string ret { };
         int idx = 0;
         while(idx < data.size() && (data[idx] == ' ' || data[idx] == '\t')) idx++;
@@ -83,7 +83,7 @@ namespace dcm {
     }
 
 
-    string& string::rtrim () {
+    string& string::rtrim() {
         std::string ret { };
         int idx = static_cast<int>(data.size()) - 1;
         while(idx >= 0 && (data[idx] == ' ' || data[idx] == '\t')) idx--;
@@ -93,13 +93,42 @@ namespace dcm {
     }
 
 
-    string& string::join (std::vector<string>& strings, std::string_view delim) {
+    string& string::join(std::vector<string>& strings, std::string_view delim) {
         for (auto const& str : strings) {
             data.append(fmt::format("{}{}", str.data, delim));
         }
         return *this;
     }
 
+
+    string& string::replace(const std::string& search, const std::string& replace) {
+        int searchSize = static_cast<int>(search.size());
+        int index = indexOf(search);
+        while(index != -1) {
+            std::string a = substr(0, index).data;
+            std::string b = substr(index + searchSize, static_cast<int>(data.size())).data;
+            data = fmt::format("{}{}", a, b);
+            index = indexOf(search);
+        }
+        return *this;
+    }
+
+
+    int string::indexOf(const std::string& search) {
+        int il = static_cast<int>(data.size());
+        int jl = static_cast<int>(search.size());
+        for (int i = 0, l = il - jl; i < l; i++) {
+            bool match = true;
+            for (int j = 0; j < jl; j++) {
+                if (data[i + j] != search[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) return i;
+        }
+        return -1;
+    }
 
     int string::indexOf(char ch) {
         int idx = 0;
@@ -177,6 +206,16 @@ namespace dcm {
             if (match) return true;
         }
         return false;
+    }
+
+
+    bool string::startsWith(const std::string& word) {
+        return contains(word) == 0;
+    }
+
+
+    bool string::endsWith(const std::string& word) {
+        return contains(word) == data.size() - word.size();
     }
 
 }
