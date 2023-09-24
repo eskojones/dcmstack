@@ -44,9 +44,6 @@ namespace dcm {
         free(m_Buffers);
     }
 
-    void ServerSocket::OnSignal(int sig) {
-    }
-
 
     bool ServerSocket::IsListening() const {
         return m_Listening;
@@ -119,14 +116,6 @@ namespace dcm {
             return false;
         }
         SetBlocking(m_ListenDescriptor, false);
-        auto sighandle = [](int) {
-            for (int i = 0; i < 256; i++) {
-                shutdown(2 + i, SHUT_RDWR);
-            }
-        };
-        signal(SIGKILL, sighandle);
-        signal(SIGTERM, sighandle);
-        signal(SIGSEGV, sighandle);
         m_Listening = true;
         Event("listen", 0);
         return true;

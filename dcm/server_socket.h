@@ -25,7 +25,6 @@ namespace dcm {
             ServerSocket();
             explicit ServerSocket(SocketType type);
             ~ServerSocket();
-            void OnSignal(int sig);
             [[nodiscard]] bool IsListening() const;
             bool IsValidSocketIndex(int socketIndex);
             struct SocketFailureInfo *GetFailure();
